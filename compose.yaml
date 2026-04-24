@@ -1,0 +1,10 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: vaadinstart-postgres
+    environment:
+      POSTGRES_DB: vaadinstart
+      POSTGRES_USER: vaadinstart
+      POSTGRES_PASSWORD: vaadinstart
+    ports:
+      - "5432:5432"
