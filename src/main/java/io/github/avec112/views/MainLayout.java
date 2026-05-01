@@ -1,8 +1,10 @@
 package io.github.avec112.views;
 
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.avatar.Avatar;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
@@ -12,7 +14,10 @@ import com.vaadin.flow.component.html.Header;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.SvgIcon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
@@ -25,6 +30,7 @@ import com.vaadin.flow.server.menu.MenuConfiguration;
 import com.vaadin.flow.server.menu.MenuEntry;
 import com.vaadin.flow.server.streams.DownloadHandler;
 import com.vaadin.flow.server.streams.DownloadResponse;
+import com.vaadin.flow.theme.lumo.Lumo;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import io.github.avec112.data.User;
 import io.github.avec112.security.AuthenticatedUser;
@@ -44,6 +50,10 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
     private AuthenticatedUser authenticatedUser;
     private AccessAnnotationChecker accessChecker;
 
+    private boolean isDarkMode = false;
+    private Icon themeToggle = new Icon(VaadinIcon.MOON_O);
+
+
     public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker) {
         this.authenticatedUser = authenticatedUser;
         this.accessChecker = accessChecker;
@@ -51,8 +61,8 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
         addHeaderContent();
-    }
 
+    }
     private void addHeaderContent() {
         DrawerToggle toggle = new DrawerToggle();
         toggle.setAriaLabel("Menu toggle");
@@ -60,8 +70,34 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
         viewTitle = new H1();
         viewTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE);
 
-        addToNavbar(true, toggle, viewTitle);
+
+        themeToggle.getStyle().set("cursor", "pointer");
+        themeToggle.setTooltipText("Switch to dark mode");
+        themeToggle.addClickListener(e -> toggleTheme());
+        HorizontalLayout themeToggleLayout = new HorizontalLayout();
+        themeToggleLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+        themeToggleLayout.getStyle().set("padding-right", "var(--lumo-space-m)");
+
+        themeToggleLayout.addToStart(toggle, viewTitle);
+        themeToggleLayout.addToEnd(themeToggle);
+        themeToggleLayout.expand(viewTitle);
+        themeToggleLayout.setWidthFull();
+
+        addToNavbar(true, themeToggleLayout);
     }
+
+    private void toggleTheme() {
+        isDarkMode = !isDarkMode;
+
+        UI.getCurrent()
+                .getElement()
+                .getThemeList()
+                .set(Lumo.DARK, isDarkMode);
+
+        themeToggle.setIcon(isDarkMode ? VaadinIcon.SUN_O : VaadinIcon.MOON_O);
+        themeToggle.setTooltipText(isDarkMode ? "Switch to light mode" : "Switch to dark mode");
+    }
+
 
     private void addDrawerContent() {
         Span appName = new Span("vaadin-gatling-abuse");
