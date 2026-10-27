@@ -2,6 +2,7 @@ package io.github.avec112;
 
 import com.vaadin.flow.component.dependency.StyleSheet;
 import com.vaadin.flow.component.page.AppShellConfigurator;
+import com.vaadin.flow.component.page.ColorScheme;
 import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
 import io.github.avec112.data.SamplePersonRepository;
@@ -25,6 +26,7 @@ import org.springframework.context.annotation.Bean;
 @StyleSheet("styles.css")
 @EnableConfigurationProperties(SqlInitializationProperties.class)
 @Theme(value = "vaadin-gatling-abuse")
+@ColorScheme(ColorScheme.Value.LIGHT_DARK)
 public class Application implements AppShellConfigurator {
 
     public static void main(String[] args) {

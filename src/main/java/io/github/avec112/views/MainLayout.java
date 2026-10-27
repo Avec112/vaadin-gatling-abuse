@@ -1,5 +1,6 @@
 package io.github.avec112.views;
 
+import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
@@ -19,6 +20,8 @@ import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
+import com.vaadin.flow.component.page.ColorScheme;
+import com.vaadin.flow.component.page.Page;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.AfterNavigationEvent;
@@ -29,8 +32,8 @@ import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.server.menu.MenuConfiguration;
 import com.vaadin.flow.server.menu.MenuEntry;
 import com.vaadin.flow.server.streams.DownloadHandler;
+import com.vaadin.flow.function.SerializableConsumer;
 import com.vaadin.flow.server.streams.DownloadResponse;
-import com.vaadin.flow.theme.lumo.Lumo;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import io.github.avec112.data.User;
 import io.github.avec112.security.AuthenticatedUser;
@@ -50,7 +53,6 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
     private AuthenticatedUser authenticatedUser;
     private AccessAnnotationChecker accessChecker;
 
-    private boolean isDarkMode = false;
     private Icon themeToggle = new Icon(VaadinIcon.MOON_O);
 
 
@@ -86,16 +88,37 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
         addToNavbar(true, themeToggleLayout);
     }
 
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        super.onAttach(attachEvent);
+        isDarkModeActive(attachEvent.getUI().getPage(), this::updateThemeToggle);
+    }
+
     private void toggleTheme() {
-        isDarkMode = !isDarkMode;
+        Page page = UI.getCurrentOrThrow().getPage();
+        isDarkModeActive(page, dark -> {
+            page.setColorScheme(dark ? ColorScheme.Value.LIGHT : ColorScheme.Value.DARK);
+            updateThemeToggle(!dark);
+        });
+    }
 
-        UI.getCurrent()
-                .getElement()
-                .getThemeList()
-                .set(Lumo.DARK, isDarkMode);
+    /**
+     * Asks the browser which color scheme is actually shown. With LIGHT_DARK the
+     * server only knows that the OS decides, so the browser has to resolve it.
+     */
+    private void isDarkModeActive(Page page, SerializableConsumer<Boolean> callback) {
+        page.executeJs("""
+                const scheme = getComputedStyle(document.documentElement).colorScheme.split(' ');
+                if (scheme.includes('light') && scheme.includes('dark')) {
+                    return matchMedia('(prefers-color-scheme: dark)').matches;
+                }
+                return scheme.includes('dark');
+                """).then(Boolean.class, callback);
+    }
 
-        themeToggle.setIcon(isDarkMode ? VaadinIcon.SUN_O : VaadinIcon.MOON_O);
-        themeToggle.setTooltipText(isDarkMode ? "Switch to light mode" : "Switch to dark mode");
+    private void updateThemeToggle(boolean dark) {
+        themeToggle.setIcon(dark ? VaadinIcon.SUN_O : VaadinIcon.MOON_O);
+        themeToggle.setTooltipText(dark ? "Switch to light mode" : "Switch to dark mode");
     }
 
 
